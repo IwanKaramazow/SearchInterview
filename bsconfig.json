@@ -1,0 +1,12 @@
+{
+  "name" : "pssearch",
+  "reason" : { "react-jsx" : 2},
+  "bs-dependencies": ["reason-react", "bs-json", "bs-fetch" ],
+  "package-specs": [ "commonjs"],
+  "sources": [
+    {
+      "dir": "src",
+    }
+  ],
+  "refmt": "/Users/Iwan/.opam/4.02.3/bin/refmt"
+}

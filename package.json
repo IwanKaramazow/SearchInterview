@@ -1,0 +1,21 @@
+{
+  "name": "pssearch",
+  "version": "0.0.1",
+  "description": "",
+  "main": "./lib/js/src/app.js",
+  "scripts": {
+    "start": "bsb -clean-world -make-world -w",
+    "test": ""
+  },
+  "author": "Iwan Karamazow",
+  "license": "MIT",
+  "dependencies": {
+    "bs-platform": "git+https://github.com/Bucklescript/bucklescript.git",
+    "bs-fetch": "^0.1.1",
+    "bs-json": "^0.2.1",
+    "jsxstyle": "^2.0.0-beta.4",
+    "react": "^16.0.0-beta.5",
+    "react-dom": "^16.0.0-beta.5",
+    "reason-react": "^0.2.3"
+  }
+}
