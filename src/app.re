@@ -1,56 +1,51 @@
 open Types;
 
 type state = {
-  companies: Js.Array.t(Company.t),
   counter: int,
   error: option(Error.t),
   cache: SearchCache.t,
-  searchText: string
+  searchText: option(string)
 };
 
 let component = ReasonReact.statefulComponent("App");
 
 let handleResponse (resp, {ReasonReact.state: state}) =
-  try {
+  try ({
          let newCompanies = Json.Decode.(array(Company.company_of_json, resp));
-         ReasonReact.Update(
-           {
-             ...state,
-             cache: SearchCache.put(state.searchText, newCompanies, state.cache),
-             companies: Js.Array.concat(state.companies, newCompanies),
-             error: None
-           }
-         )
-       } {
-  | Json.Decode.DecodeError(message) =>
-    Js.log(message);
-    ReasonReact.Update({...state, error: Some(ResponseParseError)})
+         switch (state.searchText) {
+         | Some(text) =>
+           ReasonReact.Update(
+             {
+               ...state,
+               counter: state.counter + 1,
+               cache: SearchCache.put(text, newCompanies, state.cache),
+               error: None
+             }
+           )
+         | None => ReasonReact.NoUpdate
+         }
+       }) {
+  | Json.Decode.DecodeError(_) =>
+    ReasonReact.Update({...state, searchText: None, error: Some(ResponseParseError)})
   };
 
 let handleNetworkFailure ((), {ReasonReact.state: state}) =
-  ReasonReact.Update({...state, error: Some(NetworkError)});
+  ReasonReact.Update({...state, searchText: None, error: Some(NetworkError)});
 
 let search (searchText, {ReasonReact.state: state, update}) =
-  if (searchText !== "") {
+  if (searchText !== "" && SearchCache.mem(searchText, state.cache) === false) {
     let _ =
       Js.Promise.(
         Api.search(searchText)
-        |> then_(
-             (json) =>
-               {
-                 let () = Js.log(json);
-                 update(handleResponse, json)
-               }
-               |> resolve
-           )
+        |> then_((json) => update(handleResponse, json) |> resolve)
         |> catch((_) => update(handleNetworkFailure)() |> resolve)
       );
-    ReasonReact.Update({...state, searchText})
+    ReasonReact.Update({...state, searchText: Some(searchText)})
   } else {
     ReasonReact.NoUpdate
   };
 
-let renderErrorMessage (error) =
+let errorMessage (error) =
   switch (error) {
   | Some(error) =>
     let text = Error.string_of_error(error);
@@ -58,23 +53,18 @@ let renderErrorMessage (error) =
   | None => ReasonReact.nullElement
   };
 
+let searchCount (count) =
+  <div> (ReasonReact.stringToElement("Total times searched: " ++ string_of_int(count))) </div>;
+
 let make () = {
   ...component,
-  initialState: () => {
-    companies: [||],
-    counter: 0,
-    error: None,
-    cache: SearchCache.init(),
-    searchText: ""
-  },
+  initialState: () => {counter: 0, error: None, cache: SearchCache.init(), searchText: None},
   render: ({ReasonReact.state: state, update}) =>
     <div>
+      (searchCount(state.counter))
       <SearchBox submit=(update(search)) />
-      (renderErrorMessage(state.error))
-      <Grid
-        searchText=state.searchText
-        results=(SearchCache.find(state.searchText, state.cache))
-      />
+      (errorMessage(state.error))
+      <Grid searchText=state.searchText cache=state.cache />
     </div>
 };
 

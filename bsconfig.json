@@ -8,5 +8,6 @@
       "dir": "src",
     }
   ],
-  "refmt": "/Users/Iwan/.opam/4.02.3/bin/refmt"
+  "refmt": "/Users/Iwan/.opam/4.02.3/bin/refmt",
+  "bsc-flags": ["-bs-super-errors"]
 }

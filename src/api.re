@@ -1,11 +1,7 @@
-open Bs_fetch;
-
 let baseUrl = "https://autocomplete.clearbit.com/v1/companies/suggest?query=";
 
 let search (searchQuery) = {
-  /* https://autocomplete.clearbit.com/v1/companies/suggest?query=piesync  */
+  /* https://autocomplete.clearbit.com/v1/companies/suggest?query=searchQueryComesHere  */
   let apiUrl = baseUrl ++ searchQuery;
-  Js.Promise.(fetch(apiUrl) |> then_(Response.json))
+  Js.Promise.(Bs_fetch.fetch(apiUrl) |> then_(Bs_fetch.Response.json))
 };
-
-
