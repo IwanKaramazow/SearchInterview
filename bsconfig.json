@@ -2,10 +2,15 @@
   "name" : "pssearch",
   "reason" : { "react-jsx" : 2},
   "bs-dependencies": ["reason-react", "bs-json", "bs-fetch" ],
+  "bs-dev-dependencies": ["bs-jest"], 
   "package-specs": [ "commonjs"],
   "sources": [
     {
       "dir": "src",
+    }, {
+      "dir": "__tests__",
+      "type": "dev"
+      
     }
   ],
   "refmt": "/Users/Iwan/.opam/4.02.3/bin/refmt",

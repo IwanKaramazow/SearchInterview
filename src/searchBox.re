@@ -1,16 +1,17 @@
 type state = {
   searchText: string,
-  inputRef: option(Dom.element)
+  mutable inputRef: option(Dom.element)
 };
 
-let component = ReasonReact.statefulComponent("SearchBox");
+type actions =
+  | Search(string);
 
-let setInputRef (theRef, {ReasonReact.state: state}) =
-  ReasonReact.SilentUpdate({...state, inputRef: Js.Null.to_opt(theRef)});
+let component = ReasonReact.reducerComponent("SearchBox");
 
-let handleChange (event, {ReasonReact.state: state}) = {
+/* let setInputRef (theRef) = state.inputRef = Js.Null.to_opt(theRef); */
+let handleChange (event) = {
   let searchText = (ReactDOMRe.domElementToObj(ReactEventRe.Form.target(event)))##value;
-  ReasonReact.Update({...state, searchText})
+  Search(searchText)
 };
 
 let make (:submit, _children) = {
@@ -30,12 +31,16 @@ let make (:submit, _children) = {
       };
       ReasonReact.NoUpdate
     },
-    render: ({ReasonReact.state: state, update, handle}) =>
+    reducer: (action, state) =>
+      switch (action) {
+      | Search(text) => ReasonReact.Update({...state, searchText: text})
+      },
+    render: ({ReasonReact.state: state, reduce, handle}) =>
       <div>
         <input
-          ref=(update(setInputRef))
+          ref=((inputNode) => state.inputRef = Js.Null.to_opt(inputNode))
           value=state.searchText
-          onChange=(update(handleChange))
+          onChange=(reduce(handleChange))
           onKeyDown=(handle(handleKeyDown))
         />
         <button onClick=(handle(handleClick))> (ReasonReact.stringToElement("Search")) </button>

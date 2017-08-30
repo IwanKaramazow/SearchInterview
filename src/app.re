@@ -7,43 +7,22 @@ type state = {
   searchText: option(string)
 };
 
-let component = ReasonReact.statefulComponent("App");
+type actions =
+  | SubmitSearch(string)
+  | ResponseSuccess(array(Company.t))
+  | ResponseFailure(Error.t);
 
-let handleResponse (resp, {ReasonReact.state: state}) =
+let component = ReasonReact.reducerComponent("App");
+
+let handleResponse (resp) =
   try ({
          let newCompanies = Json.Decode.(array(Company.company_of_json, resp));
-         switch (state.searchText) {
-         | Some(text) =>
-           ReasonReact.Update(
-             {
-               ...state,
-               counter: state.counter + 1,
-               cache: SearchCache.put(text, newCompanies, state.cache),
-               error: None
-             }
-           )
-         | None => ReasonReact.NoUpdate
-         }
+         ResponseSuccess(newCompanies)
        }) {
-  | Json.Decode.DecodeError(_) =>
-    ReasonReact.Update({...state, searchText: None, error: Some(ResponseParseError)})
+  | Json.Decode.DecodeError(_) => ResponseFailure(ResponseParseError)
   };
 
-let handleNetworkFailure ((), {ReasonReact.state: state}) =
-  ReasonReact.Update({...state, searchText: None, error: Some(NetworkError)});
-
-let search (searchText, {ReasonReact.state: state, update}) =
-  if (searchText !== "" && SearchCache.mem(searchText, state.cache) === false) {
-    let _ =
-      Js.Promise.(
-        Api.search(searchText)
-        |> then_((json) => update(handleResponse, json) |> resolve)
-        |> catch((_) => update(handleNetworkFailure)() |> resolve)
-      );
-    ReasonReact.Update({...state, searchText: Some(searchText)})
-  } else {
-    ReasonReact.NoUpdate
-  };
+let handleNetworkFailure () = ResponseFailure(NetworkError);
 
 let errorMessage (error) =
   switch (error) {
@@ -56,13 +35,50 @@ let errorMessage (error) =
 let searchCount (count) =
   <div> (ReasonReact.stringToElement("Total times searched: " ++ string_of_int(count))) </div>;
 
+let submitSearch ({ReasonReact.state: state, reduce}, searchText) = {
+  if (searchText !== "" && SearchCache.mem(searchText, state.cache) === false) {
+    let _ =
+      Js.Promise.(
+        Api.search(searchText)
+        |> then_((json) => reduce(handleResponse, json) |> resolve)
+        |> catch((_) => reduce(handleNetworkFailure)() |> resolve)
+      );
+    ()
+  };
+  reduce(() => SubmitSearch(searchText))()
+};
+
 let make () = {
   ...component,
   initialState: () => {counter: 0, error: None, cache: SearchCache.init(), searchText: None},
-  render: ({ReasonReact.state: state, update}) =>
+  reducer: (action, state) =>
+    switch (action) {
+    | SubmitSearch(searchText) =>
+      if (searchText !== "" && SearchCache.mem(searchText, state.cache) === false) {
+        ReasonReact.Update({...state, searchText: Some(searchText)})
+      } else {
+        ReasonReact.NoUpdate
+      }
+    | ResponseFailure(error) =>
+      ReasonReact.Update({...state, searchText: None, error: Some(error)})
+    | ResponseSuccess(newCompanies) =>
+      switch (state.searchText) {
+      | Some(text) =>
+        ReasonReact.Update(
+          {
+            ...state,
+            counter: state.counter + 1,
+            cache: SearchCache.put(text, newCompanies, state.cache),
+            error: None
+          }
+        )
+      | None => ReasonReact.NoUpdate
+      }
+    },
+  render: ({ReasonReact.state: state} as self) =>
     <div>
       (searchCount(state.counter))
-      <SearchBox submit=(update(search)) />
+      <SearchBox submit=(submitSearch(self)) />
       (errorMessage(state.error))
       <Grid searchText=state.searchText cache=state.cache />
     </div>

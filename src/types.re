@@ -43,3 +43,4 @@ module SearchCache: {
   let mem = Backend.mem;
   let init () = Backend.empty;
 };
+

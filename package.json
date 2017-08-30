@@ -5,17 +5,20 @@
   "main": "./lib/js/src/app.js",
   "scripts": {
     "start": "bsb -clean-world -make-world -w",
-    "test": ""
+    "test": "jest"
   },
   "author": "Iwan Karamazow",
   "license": "MIT",
   "dependencies": {
-    "bs-platform": "git+https://github.com/Bucklescript/bucklescript.git",
     "bs-fetch": "^0.1.1",
     "bs-json": "^0.2.1",
+    "bs-platform": "git+https://github.com/Bucklescript/bucklescript.git",
     "jsxstyle": "^2.0.0-beta.4",
     "react": "^16.0.0-beta.5",
     "react-dom": "^16.0.0-beta.5",
-    "reason-react": "^0.2.3"
+    "reason-react": "reasonml/reason-react#66b55327ad579e31e214a51741459fea287c39e8"
+  },
+  "devDependencies": {
+    "bs-jest": "^0.1.0"
   }
 }
