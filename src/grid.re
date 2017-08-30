@@ -64,7 +64,7 @@ let make (:searchText, :cache, _children) = {
             ReasonReact.stringToElement("No search results found...")
         | None => ReasonReact.stringToElement("Loading...")
         }
-      | None => Js.log("nothing here"); ReasonReact.nullElement
+      | None => ReasonReact.nullElement
       };
     <div style=gridStyle> content </div>
   }
